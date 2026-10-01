@@ -14,17 +14,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,18 +32,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Settings
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ora.ai.viewmodel.ChatViewModel
 
 @Composable
-fun ORAScreen() {
-
-    var messageText by remember {
-        mutableStateOf("")
-    }
+fun ORAScreen(
+    chatViewModel: ChatViewModel = viewModel()
+) {
 
     Column(
         modifier = Modifier
@@ -98,53 +93,67 @@ fun ORAScreen() {
             verticalArrangement = Arrangement.Bottom
         ) {
 
-            // ORA message
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.86f)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 18.dp,
-                            topEnd = 18.dp,
-                            bottomEnd = 18.dp,
-                            bottomStart = 4.dp
-                        )
-                    )
-                    .background(Color(0x332A3A46))
-                    .padding(15.dp)
-            ) {
-                Column {
+            chatViewModel.messages.forEach { message ->
 
-                    Text(
-                        text = "Hello! I'm ORA.",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = if (message.isUser) {
+                        Arrangement.End
+                    } else {
+                        Arrangement.Start
+                    }
+                ) {
 
-                    Spacer(modifier = Modifier.height(5.dp))
-
-                    Text(
-                        text = "How can I help you?",
-                        color = Color(0xFFD7E0E5),
-                        fontSize = 14.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.86f)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 18.dp,
+                                    topEnd = 18.dp,
+                                    bottomEnd = if (message.isUser) 4.dp else 18.dp,
+                                    bottomStart = if (message.isUser) 18.dp else 4.dp
+                                )
+                            )
+                            .background(
+                                if (message.isUser) {
+                                    Color(0xFF405866)
+                                } else {
+                                    Color(0x332A3A46)
+                                }
+                            )
+                            .padding(15.dp)
                     ) {
-                        Text(
-                            text = "👍  👎  🔊  📋  💾  ⋮",
-                            color = Color(0xFFB8C5CC),
-                            fontSize = 13.sp
-                        )
+
+                        Column {
+
+                            Text(
+                                text = message.text,
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            if (!message.isUser) {
+
+                                Spacer(
+                                    modifier = Modifier.height(10.dp)
+                                )
+
+                                Text(
+                                    text = "👍  👎  🔊  📋  💾  ⋮",
+                                    color = Color(0xFFB8C5CC),
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(18.dp))
+                Spacer(
+                    modifier = Modifier.height(12.dp)
+                )
+            }
         }
 
         // Message input area
@@ -181,9 +190,9 @@ fun ORAScreen() {
                     }
 
                     TextField(
-                        value = messageText,
+                        value = chatViewModel.messageText,
                         onValueChange = {
-                            messageText = it
+                            chatViewModel.updateMessageText(it)
                         },
                         modifier = Modifier.weight(1f),
                         placeholder = {
@@ -232,7 +241,9 @@ fun ORAScreen() {
             Spacer(modifier = Modifier.width(2.dp))
 
             IconButton(
-                onClick = { }
+                onClick = {
+                    chatViewModel.sendMessage()
+                }
             ) {
                 Box(
                     modifier = Modifier
