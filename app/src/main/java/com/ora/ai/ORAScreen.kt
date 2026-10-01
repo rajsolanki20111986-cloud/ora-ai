@@ -25,20 +25,67 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ora.ai.data.ApiKeyStorage
 import com.ora.ai.viewmodel.ChatViewModel
 
 @Composable
 fun ORAScreen(
     chatViewModel: ChatViewModel = viewModel()
 ) {
+
+    val context = LocalContext.current
+
+    val apiKeyStorage = remember {
+        ApiKeyStorage(context.applicationContext)
+    }
+
+    var showSettings by remember {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(Unit) {
+        chatViewModel.setApiKey(
+            apiKeyStorage.getApiKey()
+        )
+    }
+
+    if (showSettings) {
+
+        SettingsScreen(
+            currentApiKey = apiKeyStorage.getApiKey(),
+
+            onSaveApiKey = { key ->
+                apiKeyStorage.saveApiKey(key)
+                chatViewModel.setApiKey(key)
+                showSettings = false
+            },
+
+            onClearApiKey = {
+                apiKeyStorage.clearApiKey()
+                chatViewModel.setApiKey("")
+            },
+
+            onBack = {
+                showSettings = false
+            }
+        )
+
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -57,6 +104,7 @@ fun ORAScreen(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
+
                 Text(
                     text = "ORA",
                     color = Color.White,
@@ -64,7 +112,9 @@ fun ORAScreen(
                     fontWeight = FontWeight.Bold
                 )
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(
+                    modifier = Modifier.height(2.dp)
+                )
 
                 Text(
                     text = "Online",
@@ -74,7 +124,9 @@ fun ORAScreen(
             }
 
             IconButton(
-                onClick = { }
+                onClick = {
+                    showSettings = true
+                }
             ) {
                 Icon(
                     imageVector = Icons.Default.Settings,
@@ -111,8 +163,16 @@ fun ORAScreen(
                                 RoundedCornerShape(
                                     topStart = 18.dp,
                                     topEnd = 18.dp,
-                                    bottomEnd = if (message.isUser) 4.dp else 18.dp,
-                                    bottomStart = if (message.isUser) 18.dp else 4.dp
+                                    bottomEnd = if (message.isUser) {
+                                        4.dp
+                                    } else {
+                                        18.dp
+                                    },
+                                    bottomStart = if (message.isUser) {
+                                        18.dp
+                                    } else {
+                                        4.dp
+                                    }
                                 )
                             )
                             .background(
@@ -171,9 +231,14 @@ fun ORAScreen(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(28.dp))
+                    .clip(
+                        RoundedCornerShape(28.dp)
+                    )
                     .background(Color(0x332A3A46))
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .padding(
+                        horizontal = 6.dp,
+                        vertical = 2.dp
+                    )
             ) {
 
                 Row(
@@ -226,7 +291,9 @@ fun ORAScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.width(7.dp))
+            Spacer(
+                modifier = Modifier.width(7.dp)
+            )
 
             IconButton(
                 onClick = { }
@@ -238,7 +305,9 @@ fun ORAScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.width(2.dp))
+            Spacer(
+                modifier = Modifier.width(2.dp)
+            )
 
             IconButton(
                 onClick = {
