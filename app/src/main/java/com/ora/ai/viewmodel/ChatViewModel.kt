@@ -1,18 +1,25 @@
 package com.ora.ai.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.ora.ai.data.GeminiApiService
 import com.ora.ai.model.ChatMessage
+import com.ora.ai.voice.TextToSpeechManager
 import kotlinx.coroutines.launch
 
-class ChatViewModel : ViewModel() {
+class ChatViewModel(
+    application: Application
+) : AndroidViewModel(application) {
 
     private val geminiApiService = GeminiApiService()
+
+    private val textToSpeechManager =
+        TextToSpeechManager(application.applicationContext)
 
     private var nextMessageId = 1L
 
@@ -118,6 +125,8 @@ class ChatViewModel : ViewModel() {
                             isUser = false
                         )
                     )
+
+                    textToSpeechManager.speak(response)
                 }
                 .onFailure { error ->
 
@@ -146,5 +155,10 @@ class ChatViewModel : ViewModel() {
         } else {
             "Sorry, ORA को response प्राप्त करने में समस्या हुई।\n\n$message"
         }
+    }
+
+    override fun onCleared() {
+        textToSpeechManager.shutdown()
+        super.onCleared()
     }
 }
