@@ -93,11 +93,13 @@ fun ORAScreen(
             .background(Color(0xFF101820))
     ) {
 
-        // Top bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 14.dp),
+                .padding(
+                    horizontal = 18.dp,
+                    vertical = 14.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
 
@@ -117,8 +119,16 @@ fun ORAScreen(
                 )
 
                 Text(
-                    text = "Online",
-                    color = Color(0xFF8FE3A8),
+                    text = if (chatViewModel.isSending) {
+                        "Thinking..."
+                    } else {
+                        "Online"
+                    },
+                    color = if (chatViewModel.isSending) {
+                        Color(0xFFE8D58A)
+                    } else {
+                        Color(0xFF8FE3A8)
+                    },
                     fontSize = 13.sp
                 )
             }
@@ -136,7 +146,6 @@ fun ORAScreen(
             }
         }
 
-        // Chat area
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -176,10 +185,12 @@ fun ORAScreen(
                                 )
                             )
                             .background(
-                                if (message.isUser) {
-                                    Color(0xFF405866)
-                                } else {
-                                    Color(0x332A3A46)
+                                when {
+                                    message.isError -> Color(0xFF59383B)
+
+                                    message.isUser -> Color(0xFF405866)
+
+                                    else -> Color(0x332A3A46)
                                 }
                             )
                             .padding(15.dp)
@@ -189,12 +200,16 @@ fun ORAScreen(
 
                             Text(
                                 text = message.text,
-                                color = Color.White,
+                                color = if (message.isError) {
+                                    Color(0xFFFFD4D4)
+                                } else {
+                                    Color.White
+                                },
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium
                             )
 
-                            if (!message.isUser) {
+                            if (!message.isUser && !message.isLoading) {
 
                                 Spacer(
                                     modifier = Modifier.height(10.dp)
@@ -216,7 +231,6 @@ fun ORAScreen(
             }
         }
 
-        // Message input area
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -267,15 +281,18 @@ fun ORAScreen(
                             )
                         },
                         singleLine = true,
+                        enabled = !chatViewModel.isSending,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
                             unfocusedContainerColor = Color.Transparent,
                             disabledContainerColor = Color.Transparent,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
                             cursorColor = Color.White,
                             focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            unfocusedTextColor = Color.White,
+                            disabledTextColor = Color(0xFF89959C)
                         )
                     )
 
@@ -296,7 +313,8 @@ fun ORAScreen(
             )
 
             IconButton(
-                onClick = { }
+                onClick = { },
+                enabled = !chatViewModel.isSending
             ) {
                 Icon(
                     imageVector = Icons.Default.Call,
@@ -312,13 +330,20 @@ fun ORAScreen(
             IconButton(
                 onClick = {
                     chatViewModel.sendMessage()
-                }
+                },
+                enabled = !chatViewModel.isSending
             ) {
                 Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(Color(0xFF6E8FA3)),
+                        .background(
+                            if (chatViewModel.isSending) {
+                                Color(0xFF45535B)
+                            } else {
+                                Color(0xFF6E8FA3)
+                            }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
