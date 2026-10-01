@@ -41,10 +41,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ora.ai.data.ApiKeyStorage
 import com.ora.ai.viewmodel.ChatViewModel
+import com.ora.ai.voice.VoiceConversationViewModel
 
 @Composable
 fun ORAScreen(
-    chatViewModel: ChatViewModel = viewModel()
+    chatViewModel: ChatViewModel = viewModel(),
+    voiceViewModel: VoiceConversationViewModel = viewModel()
 ) {
 
     val context = LocalContext.current
@@ -72,7 +74,14 @@ fun ORAScreen(
         VoiceConversationScreen(
             onEndCall = {
                 showVoiceConversation = false
-            }
+            },
+
+            onRecognizedText = { text ->
+                chatViewModel.updateMessageText(text)
+                chatViewModel.sendMessage()
+            },
+
+            voiceViewModel = voiceViewModel
         )
 
         return
@@ -202,9 +211,7 @@ fun ORAScreen(
                             .background(
                                 when {
                                     message.isError -> Color(0xFF59383B)
-
                                     message.isUser -> Color(0xFF405866)
-
                                     else -> Color(0x332A3A46)
                                 }
                             )
@@ -312,7 +319,15 @@ fun ORAScreen(
                     )
 
                     IconButton(
-                        onClick = { }
+                        onClick = {
+                            voiceViewModel.startListening(
+                                onTextResult = { text ->
+                                    chatViewModel.updateMessageText(text)
+                                    chatViewModel.sendMessage()
+                                }
+                            )
+                        },
+                        enabled = !chatViewModel.isSending
                     ) {
                         Icon(
                             imageVector = Icons.Default.Mic,
