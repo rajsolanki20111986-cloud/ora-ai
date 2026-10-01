@@ -57,10 +57,25 @@ fun ORAScreen(
         mutableStateOf(false)
     }
 
+    var showVoiceConversation by remember {
+        mutableStateOf(false)
+    }
+
     LaunchedEffect(Unit) {
         chatViewModel.setApiKey(
             apiKeyStorage.getApiKey()
         )
+    }
+
+    if (showVoiceConversation) {
+
+        VoiceConversationScreen(
+            onEndCall = {
+                showVoiceConversation = false
+            }
+        )
+
+        return
     }
 
     if (showSettings) {
@@ -313,7 +328,9 @@ fun ORAScreen(
             )
 
             IconButton(
-                onClick = { },
+                onClick = {
+                    showVoiceConversation = true
+                },
                 enabled = !chatViewModel.isSending
             ) {
                 Icon(
