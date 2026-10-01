@@ -21,6 +21,9 @@ class ChatViewModel : ViewModel() {
     var messageText by mutableStateOf("")
         private set
 
+    var isSending by mutableStateOf(false)
+        private set
+
     private var apiKey = ""
 
     init {
@@ -42,6 +45,11 @@ class ChatViewModel : ViewModel() {
     }
 
     fun sendMessage() {
+
+        if (isSending) {
+            return
+        }
+
         val text = messageText.trim()
 
         if (text.isEmpty()) {
@@ -59,26 +67,31 @@ class ChatViewModel : ViewModel() {
         messageText = ""
 
         if (apiKey.isBlank()) {
+
             messages.add(
                 ChatMessage(
                     id = nextMessageId++,
                     text = "Gemini API key अभी सेट नहीं है। Settings में API key जोड़ें।",
-                    isUser = false
+                    isUser = false,
+                    isError = true
                 )
             )
+
             return
         }
 
+        isSending = true
+
+        val loadingMessageId = nextMessageId++
+
         messages.add(
             ChatMessage(
-                id = nextMessageId++,
+                id = loadingMessageId,
                 text = "Thinking...",
                 isUser = false,
                 isLoading = true
             )
         )
-
-        val loadingMessageId = nextMessageId - 1
 
         viewModelScope.launch {
 
@@ -97,6 +110,7 @@ class ChatViewModel : ViewModel() {
 
             result
                 .onSuccess { response ->
+
                     messages.add(
                         ChatMessage(
                             id = nextMessageId++,
@@ -106,14 +120,31 @@ class ChatViewModel : ViewModel() {
                     )
                 }
                 .onFailure { error ->
+
                     messages.add(
                         ChatMessage(
                             id = nextMessageId++,
-                            text = "Sorry, मुझे response प्राप्त करने में समस्या हुई।\n\n${error.message ?: "Unknown error"}",
-                            isUser = false
+                            text = buildErrorMessage(error),
+                            isUser = false,
+                            isError = true
                         )
                     )
                 }
+
+            isSending = false
+        }
+    }
+
+    private fun buildErrorMessage(
+        error: Throwable
+    ): String {
+
+        val message = error.message?.trim()
+
+        return if (message.isNullOrBlank()) {
+            "Sorry, ORA को response प्राप्त करने में समस्या हुई। कृपया फिर से कोशिश करें।"
+        } else {
+            "Sorry, ORA को response प्राप्त करने में समस्या हुई।\n\n$message"
         }
     }
 }
